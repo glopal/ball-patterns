@@ -1,0 +1,200 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Ball Patterns</title>
+
+  <script>
+    const cueBallColor = "#f2eacb"
+    const ballColors = [
+        "#ffbb03",
+        "#032b4f",
+        "#d60215",
+        "#2d1035",
+        "#f63c0e",
+        "#034433",
+        "#600512",
+        "#070707"
+    ]
+    window.onload = function() {
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+
+        // resize the canvas to fill browser window dynamically
+        window.addEventListener('resize', resizeCanvas, false);
+        
+        function resizeCanvas() {
+            canvas.height = window.innerHeight;
+            canvas.width = window.innerHeight / 2;
+
+            console.log(`w: ${canvas.width} h: ${canvas.height}`)
+                        
+            /**
+             * Your drawings need to be inside this function otherwise they will be reset when 
+             * you resize the browser window and the canvas goes will be cleared.
+             */
+            drawStuff(); 
+        }
+        
+        resizeCanvas();
+        // function randomIntFromInterval(min, max) { // min and max included 
+        //     return Math.floor(Math.random() * (max - min + 1) + min)
+        // }
+
+        function moveBallAway(staticBall, moveBall, radius, forward) {
+            var newBall = {
+                color: moveBall.color
+            }
+            console.log("BALL: ")
+            console.log(ball)
+            var slope = (moveBall.y - staticBall.y) / (moveBall.x - staticBall.x)
+            
+
+            // Find angle of line
+            var theta = Math.atan(slope);
+
+            var distance = radius*2 + 1
+            if(!forward) distance = -distance
+
+            // the coordinates of the A3 Point
+            newBall.x = (staticBall.x + distance * Math.cos(theta));
+            newBall.y = (staticBall.y + distance * Math.sin(theta));
+
+            console.log(Math.hypot(staticBall.x-newBall.x, staticBall.y-newBall.y))
+            // if(moveBall.x > staticBall.x) moveBall.x = staticBall.x + (radius * 2) + 1
+            // if(moveBall.y > staticBall.y) moveBall.x = staticBall.x + (radius * 2) + 1
+
+            return newBall
+        }
+
+        function isBallOverlapping(ball, balls, radius) {
+            for(var i = 0; i < balls.length; i++) {
+                console.log("INDEX: " + i)
+                var hypot = Math.hypot(balls[i].x-ball.x, balls[i].y-ball.y)
+                console.log("RADIUS: " + radius)
+                console.log("HYPOT: " + hypot)
+
+                if(hypot <= radius * 2) return balls[i]
+            }
+
+            return null
+        }
+        function randomCoord(xMax, yMax) { // min and max included 
+            return {
+                x: Math.floor(Math.random() * (xMax - 0 + 1) + 0),
+                y: Math.floor(Math.random() * (yMax - 0 + 1) + 0)
+            }
+        }
+
+        function ballInBounds(ball, xMax, yMax) {
+            return ball.x >= 0 && ball.y >= 0 && ball.x <= xMax && ball.y <= yMax
+        }
+        var ballCount = 5;
+
+        function randomizeBalls(xMax, yMax, radius) {
+            var cueball = randomCoord(xMax, yMax);
+            cueball.color = cueBallColor
+            var balls = [cueball];
+
+            for(var i = 0; i < ballCount; i++) {
+                
+                ball = {
+                    color:ballColors[i]
+                }
+
+                var overlap = isBallOverlapping(ball, balls, radius)
+
+                while (true) {
+                    ball = Object.assign(ball, randomCoord(xMax, yMax))
+                    var overlap = isBallOverlapping(ball, balls, radius)
+
+                    if(overlap == null) break;
+
+                    ball = moveBallAway(overlap, ball, radius, true)
+
+                    if(isBallOverlapping(ball, balls, radius) == null && ballInBounds(ball)) break;
+
+                    ball = moveBallAway(overlap, ball, radius, false)
+
+                    if(isBallOverlapping(ball, balls, radius) == null && ballInBounds(ball)) break;
+                }
+
+                balls.push(ball)
+            }
+
+            return balls
+        }
+                
+        function drawStuff() {
+            var img = new Image();
+            img.onload = function() {
+                ctx.drawImage(img, 0, 0, img.width, img.height, 0, 0, canvas.width, canvas.height);
+                var height = Math.round(canvas.height * .806)
+                var width = Math.round(canvas.width * .802)
+                var x = Math.round(canvas.width * .099)
+                var y = Math.round(canvas.height * .097)
+                var radius = Math.round(canvas.height * .011)
+
+                var ballX = x + radius
+                var ballY = y + radius
+                var ballWidth = width - radius * 2
+                var ballHeight = height - radius * 2
+
+                var balls = randomizeBalls(ballWidth, ballHeight, radius)
+
+                // var balls = [
+                //     {x:20,y:35,color:ballColors[0]},
+                // ]
+                // var ball = {x:35,y:35,color:ballColors[1]}
+                // var overlapBall = isBallOverlapping(ball, balls, radius)
+
+                // if(overlapBall != null) {
+                //     ball = moveBallAway(overlapBall, ball, radius, true)
+                //     console.log(ball)
+                // }
+
+                // balls.push(ball)
+
+                balls.forEach(function(ball) {
+                    ctx.beginPath();
+                    ctx.arc(ballX + ball.x, ballY + ball.y, radius, 0, 2 * Math.PI, false);
+                    ctx.strokeStyle = ball.color;
+                    ctx.fillStyle = ball.color;
+                    ctx.fill();
+                    ctx.stroke();
+                })
+                // for(var i = 0; i < 7; i++) {
+                //     ctx.beginPath();
+                //     ctx.arc(ballX + randomIntFromInterval(0,ballWidth), ballY + randomIntFromInterval(0,ballHeight), radius, 0, 2 * Math.PI, false);
+                //     ctx.strokeStyle = ballColors[i];
+                //     ctx.fillStyle = ballColors[i];
+                //     ctx.fill();
+                //     ctx.stroke();
+                // }
+
+                // ctx.beginPath();
+                // ctx.arc(x + 27, y + 7, radius, 0, 2 * Math.PI, false);
+                // ctx.strokeStyle = "blue";
+                // ctx.fillStyle = 'blue';
+                // ctx.fill();
+                // ctx.stroke();
+
+                console.log("AFTER")
+                console.log(`x: ${x} y: ${y} w: ${width} h: ${height}`)
+            };
+            img.src = 'pooltable.png';
+
+
+        }
+    }
+  </script>
+
+</head>
+
+<body>
+    <canvas id="canvas"></canvas>
+</body>
+</html>
