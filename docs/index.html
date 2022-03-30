@@ -27,8 +27,8 @@
         window.addEventListener('resize', resizeCanvas, false);
         
         function resizeCanvas() {
-            canvas.height = window.innerHeight;
-            canvas.width = window.innerHeight / 2;
+            canvas.height = window.visualViewport.height;
+            canvas.width = window.visualViewport.height / 2;
 
             console.log(`w: ${canvas.width} h: ${canvas.height}`)
                         
